@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Image Dehazing App - Clear Up Your Images</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Add icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        .jumbotron {
+            background-image: url(./../static/images/header.jpeg);
+            background-position: center;
+            background-size: cover;
+            color: white;
+            margin: 0;
+        }
+
+        .card {
+            margin-bottom: 20px;
+        }
+
+        footer {
+            padding: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+        <!-- <a class="navbar-brand" href="#">HazeHunt</a> -->
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="img-fluid"
+            style="height:45px; border-radius: 15px">
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Pricing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+        </div> -->
+    </nav>
+
+    <!-- Jumbotron -->
+    <section class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1>Clear Up Your Hazy Images</h1>
+            <p>
+                With our image dehazing app, you can transform your blurry and hazy
+                photos into clear and vivid images.
+            </p>
+            <a href="/main" class="btn btn-primary btn-lg">Click to Dehaze &nbsp;<i class="fa fa-arrow-right"
+                    aria-hidden="true"></i></a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="container my-5">
+        <div class="row">
+            <div class="col-sm-5">
+                <img src="./../static/images/header.jpg" class="rounded" alt="Before and After" height="225px" />
+            </div>
+            <div class="col-sm-7">
+                <h2>Features</h2>
+                <ul>
+                    <li>Remove haze and fog from images</li>
+                    <li>Intuitive and easy-to-use interface</li>
+                    <li>Works with JPG, JPEG ans PNG image files</li>
+                    <li>Image files is stored on users permission</li>
+                    <li>Able to donwload dehazed image</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <!-- <div class="container mt-4">
+        <h2>Pricing</h2>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-header">Basic</div>
+                    <div class="card-body">
+                        <h4 class="card-title">$9.99/month</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Remove haze and fog from images</li>
+                            <li class="list-group-item">Adjust contrast and brightness</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary">Choose Plan</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-header">Pro</div>
+                    <div class="card-body">
+                        <h4 class="card-title">$19.99/month</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">All basic features</li>
+                            <li class="list-group-item">
+                                Works with JPEG and RAW image files
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-primary">Choose Plan</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-header">Premium</div>
+                    <div class="card-body">
+                        <h4 class="card-title">$29.99/month</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">All pro features</li>
+                            <li class="list-group-item">Priority customer support</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary">Choose Plan</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Feedback section -->
+    <section id="" class="py-5" style="background: rgb(0,212,255);
+    background: radial-gradient(circle, rgba(0,212,255,1) 0%, rgba(11,55,147,1) 100%);">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-8 col-lg-9">
+                    <div class="call-action-content text-center">
+                        <h2 class="">Feel free to leave a feedback</h2>
+                        <a href="/contactus" class="btn btn-primary btn-lg"> Contact
+                            Us &nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+                    </div> <!-- call action content -->
+                </div>
+            </div> <!-- row -->
+        </div> <!-- container -->
+    </section>
+
+    <!-- Guidelines -->
+    <section id="" class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="">
+                    <div class="text-center mb-4">
+                        <h2 class="mb-5">Guidelines</h2>
+                        <!-- <ul> -->
+                        <!-- <li style="list-style: none;">  -->
+                        <img src="./../static/images/guidlines.png" class="rounded" alt="Guidlines" />
+                        <!-- </li> -->
+                        <!-- </ul> -->
+                    </div> <!-- call action content -->
+                    <ol>
+                        <li style="list-style: none;"><img src="./../static/images/g1.png" /> &nbsp; Input the hazy
+                            image to
+                            the dropzone area.</li>
+                        <li style="list-style: none;"><img src="./../static/images/g2.png" /> &nbsp; Click the dehaaze
+                            button.
+                            Remove and select the
+                            image again if its not correct.</li>
+                        <li style="list-style: none;"><img src="./../static/images/g3.png" /> &nbsp; Input image and
+                            Output
+                            image are displayed.</li>
+                        <li style="list-style: none;"><img src="./../static/images/g4.png" /> &nbsp; Save the image to
+                            the
+                            server based on users
+                            preference.</li>
+                        <li style="list-style: none;"><img src="./../static/images/g5.png" /> &nbsp; Download the
+                            dehazed
+                            image.</li>
+                        <li style="list-style: none;"><img src="./../static/images/g6.png" /> &nbsp; Dehaze a new image.
+                        </li>
+                    </ol>
+                </div>
+            </div> <!-- row -->
+        </div> <!-- container -->
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white">
+        <div class="container">
+            <div class="row text-center">
+                <!-- <div class="col-sm-4">
+                </div> -->
+                <div class="mx-auto">
+                    <p class="m-0">HazeHunt</p>
+                    <p class="m-0">&copy; 2023 Image Dehazing App</p>
+                    <p class="m-0"><a href="">Privacy Policy</a></p>
+                </div>
+                <!-- <div class="col-sm-6">
+                </div> -->
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

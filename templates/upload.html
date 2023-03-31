@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FYP - DEHAZE</title>
+
+    <!-- <link rel="stylesheet" href="./../assets/css/style.css" /> -->
+
+    <!-- <link rel="icon" href="http://localhost/codeigniter-cw/assets/images/logo2.png" type="image/x-icon"> -->
+
+    <!-- Add icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Jquery js-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+    <!-- Bootsrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+    <!-- Bootstrap CSS and JavaScript -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+
+
+    <!-- Sweet alert -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.min.js"></script>
+
+    <!-- Underscore js -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.1/underscore-min.js"></script> -->
+
+    <!-- Backbone js -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone-min.js"></script> -->
+
+    <!-- swiper -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css" /> -->
+
+    <style>
+        #dropzone {
+            border: 2px dashed #999;
+            background-color: #f7f7f7;
+            height: 350px;
+            width: 550px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #dropzone img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        #dropzone:hover {
+            background-color: #f0f0f0;
+        }
+
+        #dropzone:active {
+            background-color: #e5e5e5;
+        }
+
+        #dropzone input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        #images_container {
+            text-align: center;
+            margin: 10px auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .navbar-nav .active {
+            background-color: blue;
+            color: white;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- <nav class="navbar navbar-expand-md bg-dark navbar-dark sticky-top" style="background-color: #757575;"> -->
+    <!-- #5DA5DA | #8BC34A | #FFA500 | #757575 -->
+    <!-- <div class="container-fluid align-middle">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="img-fluid" style="height:45px">
+            <form class="d-flex">
+                <a href="/main" id=""><i class="fa fa-home mx-2" title="Home"
+                        style="color: white; font-size: 45px; margin-top: 2px" aria-hidden="true"></i></a>
+                <a href="/loading" id=""><i class="fa fa-cubes mx-2" title="Dehaze"
+                        style="color: white; font-size: 40px; margin-top: 5px" aria-hidden="true"></i></a>
+                <a href="/output" id=""><i class="fa fa-cog mx-2" title="Features"
+                        style="color: white; font-size: 45px; margin-top: 2px" aria-hidden="true"></i></a>
+            </form>
+        </div>
+    </nav> -->
+
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark sticky-top">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="img-fluid"
+            style="height:45px; border-radius: 15px">
+
+        <!-- <a class="navbar-brand" href="">HazeHunt</a> -->
+        <!-- <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button> -->
+        <div class="collapse navbar-collapse ">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item {% if request.path == '/main' %}active{% endif %}">
+                    <a class="nav-link" href="/main">Dehaze</a>
+                </li>
+                <li class="nav-item {% if request.path == '/contactus' %}active{% endif %}">
+                    <a class="nav-link" href="/contactus">Contact</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="input_section" id="input_section">
+
+        <div>
+            <div class="col m-auto">
+                <!-- <form method="post" enctype="multipart/form-data" id="upload-form"> -->
+                <p class="text-center mt-3 pt-3">Input the image to be dehazed</p>
+                <div id="dropzone" class="m-auto mb-3">
+                    <p class="fs-5 text-muted m-0 p-4">Drag and drop an image here or click here to choose file</p>
+                    <input type="file" id="input_image" name='image' accept="image/*"
+                        onchange="handleFileSelect(event)">
+                </div>
+                <div class="d-flex justify-content-center align-items-center my-2">
+                    <div class="d-flex">
+                        <div id="removebtn" class="text-center"></div>
+                        <button type="button" class="btn btn-primary ms-2" id="uploadbtn" disabled="true">
+                            <i class="fa fa-upload me-2" aria-hidden="true"></i> Dehaze
+                        </button>
+                    </div>
+                </div>
+                <!-- </form> -->
+            </div>
+        </div>
+        <div id="progress-bar"></div>
+    </section>
+
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body ">
+                    <div class="loading_container_logo align-items-center d-flex flex-column">
+                        <img src="{{ url_for('static', filename='images/loadingscreen.gif') }}" />
+                        <p>Dehazing in-progress</p>
+                    </div>
+                    <div id="progress-bar" class="mt-2">
+                        <div class="progress w-75 m-auto mt-3" data-toggle="tooltip" data-bs-tooltip=""
+                            style=" margin: -70px 0 75px 50px; box-shadow: 0px 5px 20px rgba(33,37,41,0.2); height: 30px"
+                            title="Progress to get your de-hazed output">
+                            <div id="progressBar"
+                                class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                                aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 66%;">Step 2/3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <section class="output_section" id="output_section" style="display: none;">
+        <div class="row row-cols-1 row-cols-sm-3 row-cols-md-3 mb-4 mx-5 px-5" id="image_section">
+            <!-- input image | converter image | output image -->
+        </div>
+
+        <div id="progress-bar">
+            <div class="progress w-50 m-auto my-3" data-toggle="tooltip" data-bs-tooltip=""
+                style=" margin: -70px 0 75px 50px; box-shadow: 0px 5px 20px rgba(33,37,41,0.2); height: 30px"
+                title="Progress to get your de-hazed output">
+                <div id="progressBar" class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                    aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">Step 3/3</div>
+            </div>
+        </div>
+
+        <div id="scores" class="d-flex flex-column justify-content-center align-items-center my-3">
+            <h2>Evaluation Results</h2>
+            <div>
+                <p id="score0" class="fs-5 m-0">Time Taken : <span class="fw-bold" id="Time"></span></p>
+            </div>
+            <p id="score1" class="fs-5 m-0">SSIM Score : <span class="fw-bold" id="SSIM_Score"></span></p>
+            <p id="score2" class="fs-5 m-0">PSNR Score : <span class="fw-bold" id="PSNR_Score"></span></p>
+        </div>
+
+        <div class="d-flex flex-column justify-content-center align-items-center my-3">
+            <div>
+                Click here if you prefer to save the image to the system? <i class="fa fa-hand-o-right"
+                    aria-hidden="true"></i>
+                <button type="button" class="btn btn-link" id="savebtn">
+                    <i class="fa fa-cloud me-2" aria-hidden="true"></i>Save Image
+                </button>
+            </div>
+            <button type="button" class="btn btn-primary my-1" id="downloadbtn">
+                <!-- donwload button -->
+            </button>
+            <button type="button" class="btn btn-primary my-1" id="home">
+                <a href="/main" style="color: white; text-decoration: none"><i class="fa fa-cubes me-2"
+                        aria-hidden="true"></i>Dehaze New Image</a>
+            </button>
+        </div>
+    </section>
+
+    <script>
+
+        var dropzone = document.getElementById('dropzone');
+        var uploadbtn = document.getElementById('uploadbtn');
+        var removebtn = document.getElementById('removebtn');
+        var progressbar = document.getElementById('progress-bar');
+
+        //------------------------------------------------------------------------------------------------------
+
+        // Event listener to prevent default browser behavior
+        function handleDragOver(event) {
+            event.preventDefault();
+        }
+
+        // Event listener to handle dropped files
+        function handleFileSelect(event) {
+            event.preventDefault();
+            var file = event.target.files[0] || event.dataTransfer.files[0];
+
+            console.log('file ==> ', file);
+
+            // Check if the file is an image
+            if (!file.type.match('image.*')) {
+                // user clicked Yes // enter logic to save
+                swal.fire({
+                    title: 'Please select an image file',
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2000
+                })
+                return;
+            }
+
+            // Create an image element
+            var img = document.createElement('img');
+            img.file = file;
+            console.log('img ==> ', img);
+
+            // Create or update the remove button element
+            if (!removebtn.innerHTML) {
+                uploadbtn.disabled = false;
+                var removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.classList.add('btn', 'btn-danger');
+                removeButton.innerHTML = '<i class="fa fa-trash me-2"></i> ' + removeButton.textContent;
+                progressbar.innerHTML = `<div class="progress w-50 m-auto mt-3" data-toggle="tooltip" data-bs-tooltip="" style=" margin: -70px 0 75px 50px; box-shadow: 0px 5px 20px rgba(33,37,41,0.2); height: 30px" title="Progress to get your de-hazed output">
+                    <div id="progressBar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 33%;">Step 1/3</div>
+                </div>`;
+                removeButton.addEventListener('click', function () {
+                    uploadbtn.disabled = true;
+                    dropzone.removeChild(img);
+                    dropzone.innerHTML = '<p class="fs-5 text-muted m-0 p-4">Drag and drop an image here or click here to choose file</p><input type="file" id="input_image" name="image" accept="image/*" onchange="handleFileSelect(event)">'
+                    removebtn.innerHTML = '';
+                    removebtn.style.display = 'none';
+                    progressbar.innerHTML = ''; // remove the progress bar
+                });
+                removebtn.appendChild(removeButton);
+            } else {
+                removebtn.firstChild.addEventListener('click', function () {
+                    dropzone.removeChild(img);
+                    dropzone.innerHTML = '<p>Drag and drop an image here or click here to choose file</p><input type="file" accept="image/*" onchange="handleFileSelect(event)">'
+                    removebtn.innerHTML = '';
+                    removebtn.style.display = 'none';
+                });
+            }
+
+            // Display the image and remove button in the dropzone area
+            dropzone.innerHTML = '';
+            dropzone.appendChild(img);
+            removebtn.style.display = '';
+
+            // Read the file and set the image source
+            var reader = new FileReader();
+            reader.onload = (function (aImg) {
+                return function (e) {
+                    aImg.src = e.target.result;
+                };
+            })(img);
+
+            reader.readAsDataURL(file);
+
+            $(document).on('click', '#uploadbtn', function (e) {
+                $('#loadingModal').modal('show');
+
+                console.log('uploadbtn clicked');
+                var postFormData = new FormData();
+                console.log('img ==> new : ', img);
+                postFormData.append('image', img.file);
+
+                var image = postFormData.get('image');
+                console.log('postFormData ==> ', image);
+
+                $.ajax({
+                    url: '/loading',
+                    type: 'POST',
+                    data: postFormData,
+                    processData: false,
+                    contentType: false,
+
+                }).done(function (response) {
+                    $('#loadingModal').modal('hide');
+                    document.getElementById("input_section").style.display = "none";
+                    document.getElementById("output_section").style.display = "block";
+                    console.log(" LINE 209 ", response);
+                    if (response) {
+                        console.log(response);
+                        console.log(response.status);
+                        console.log('SUCCESS');
+
+                        var input_path = response.input;
+                        var input_path = input_path.split('inputs/')[1];
+                        console.log('input_path ==> ', input_path);
+
+                        var output_path = response.output;
+                        var output_path = output_path.split('outputs/')[1];
+                        console.log('output_path ==> ', output_path);
+
+                        var time_taken = response.time + ' seconds';
+
+                        $('#image_section').append(`
+                            <div class="col p-0 m-0">
+                                <p class="text-center">Input Image</p>
+                                <div id="images_container">
+                                    <img src="static/inputs/${input_path}" alt="Input Image" id="input_image"/>
+                                    <!-- <img src="{{ url_for('static', filename='${input_path}') }}" alt="Input Image"> -->
+                                </div>
+                            </div>
+                            <div class="col d-flex justify-content-center">
+                                <div class="my-auto py-3">
+                                    <img src="{{ url_for('static', filename='images/convert.gif') }}" height="100px">
+                                </div>
+                            </div>
+                            <div class="col p-0 m-0">
+                                <p class="text-center">Output Image</p>
+                                <div id="images_container">
+                                    <img src="static/outputs/${output_path}" alt="Output Image" id="output_image"/>
+                                    <!-- <img src="{{ url_for('static', filename='${output_path}') }}" alt="Output Image" /> -->
+                
+                                </div>
+                            </div>
+                        `)
+
+                        $('#Time').text(time_taken);
+                        $('#PSNR_Score').text(response.psnr);
+                        $('#SSIM_Score').text(response.ssim);
+
+                        $('#downloadbtn').append(`
+                            <a href="static/outputs/${output_path}" download="${output_path}" style="    text-decoration: none; color: inherit;"><i class="fa fa-download me-2" aria-hidden="true"></i>Download Image</a>
+                        `)
+
+
+                    }
+                    else {
+                        console.log('ELSE');
+                        swal.fire({
+                            title: response.responseText,
+                            icon: 'error',
+                            showConfirmButton: true,
+                        })
+                    }
+                }).fail(function (response) {
+                    $('#loadingModal').modal('hide');
+                    console.log('FAIL');
+                    console.log(response.responseText);
+                    swal.fire({
+                        title: response.responseText,
+                        icon: 'error',
+                        showConfirmButton: true,
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            // Call the "/" API using AJAX
+                            location.reload();
+                        }
+                    });
+
+                });
+            });
+
+        }
+
+        // Add event listeners to the dropzone and file input
+        dropzone.addEventListener('dragover', handleDragOver, false);
+        dropzone.addEventListener('drop', handleFileSelect, false);
+
+
+        //------------------------------------------------------------------------------------------------------
+
+        // ajax call to save Image to the system
+
+        $(document).on('click', '#savebtn', function (e) {
+
+            console.log('save button clicked');
+
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+
+            var image = new Image();
+            image.onload = function () {
+                var input_image = $('#input_image').attr('src')
+                input_image = input_image.split('inputs/')[1];
+                console.log('383 input_image ==> ', input_image);
+
+                var output_image = $('#output_image').attr('src')
+                output_image = output_image.split('outputs/')[1];
+                console.log('383 output_image ==> ', output_image);
+
+                canvas.width = image.width;
+                canvas.height = image.height;
+                context.drawImage(image, 0, 0);
+                canvas.toBlob(function (blob) {
+
+                    var formData = new FormData();
+                    //formData.append('hazy_image', blob, 'logo.png');
+                    formData.append('hazy_image', blob, input_image);
+                    formData.append('dehazed_image', blob, output_image);
+
+                    $.ajax({
+                        url: '/save_images',
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            swal.fire({
+                                title: response.responseText,
+                                icon: 'success',
+                                showConfirmButton: false,
+                                timer: 2000
+                            })
+                        },
+                        error: function (xhr, status, error) {
+                            swal.fire({
+                                title: response.responseText,
+                                icon: 'error',
+                                showConfirmButton: false,
+                                timer: 2000
+                            })
+                        }
+                    });
+                }, 'image/jpeg', 0.9);
+            }
+            image.src = $('#input_image').attr('src');
+            // image.src = $('#output_image').attr('src');
+
+        });
+
+
+        // ----------------------------------------------------------------------------------------------------
+        function confirmSave() {
+            swal.fire({
+                title: 'Are you sure?',
+                text: "Do you prefer to save the image to the system?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, save it!'
+            }).then((result) => {
+                console.log('result ==> ', result);
+                if (result.isConfirmed) {
+                    // user clicked Yes // enter logic to save
+
+                    console.log('save button clicked');
+
+                    var canvas = document.createElement('canvas');
+                    var context = canvas.getContext('2d');
+
+                    var image = new Image();
+                    image.onload = function () {
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+                        context.drawImage(image, 0, 0);
+                        canvas.toBlob(function (blob) {
+                            var file = $('#input_image')[0].files[0];
+                            var formData = new FormData();
+                            formData.append('image', blob, file.name);
+
+                            $.ajax({
+                                url: '/save_images',
+                                type: 'POST',
+                                data: formData,
+                                contentType: false,
+                                processData: false,
+                                success: function (response) {
+                                    // Handle successful response from the server
+                                },
+                                error: function (xhr, status, error) {
+                                    // Handle errors
+                                }
+                            });
+                        }, 'image/jpeg', 0.9);
+                    }
+                    image.src = $('#input_image').attr('src');
+
+                    swal.fire({
+                        title: 'Image is successfully saved',
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                } else {
+                    // user clicked No
+                    // do nothing
+                }
+            })
+        }
+    </script>
+
+
+
+</body>
+
+</html>
+
+<!--             var input_image = $('#input_image').attr('src');
+            var output_image = $('#output_image').attr('src');
+
+            console.log('input_image ==> ', input_image);
+            console.log('output_image ==> ', output_image);
+
+            var dataImages = new FormData();
+            dataImages.append('hazy_image', input_image.file);
+            dataImages.append('dehazed_image', output_image.file);
+
+            var hazy_image = dataImages.get('hazy_image');
+            var dehazed_image = dataImages.get('dehazed_image');
+            console.log('hazy_image ==> ', hazy_image);
+            console.log('dehazed_image ==> ', dehazed_image);
+            console.log('dataset images ==> check : ', dataImages);
+ -->

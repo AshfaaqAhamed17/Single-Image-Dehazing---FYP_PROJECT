@@ -2,22 +2,16 @@
 
 import os
 import io
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
-import numpy as np
-from PIL import Image
-from skimage.metrics import peak_signal_noise_ratio
-from tensorflow.image import psnr, ssim
-# from skimage.metrics import structural_similarity as ssim
 import glob
 import random
 import datetime
 import shutil
+from PIL import Image
 from flask import Flask, request, url_for, render_template, jsonify, send_file
 from keras.models import load_model
-
-# Evaluation
-import generator
 
 
 UPLOAD_FOLDER = 'myenv/static/inputs'
@@ -26,7 +20,6 @@ remove_directories = ['./static/inputs', './static/outputs']
 # model_path = 'myenv\model\saved_model.pb'  # replace with your model path
 # model = tf.saved_model.load(model_path)
 
-generator = generator.build_generator()
 dehaze_model = tf.keras.models.load_model('model', compile=False)
 
 # model = load_model(model_path)
@@ -51,8 +44,6 @@ def main():
     clear_directory('myenv\static\outputs')
     print('CLEAR OUTPUTS DIRECTORY')
     print(' ')
-
-    print(generator)
     return render_template('upload.html')
 
 # ---------------------------------------------------------------------------------------
@@ -92,7 +83,6 @@ def loading():
     elapsed_time = end_time - start_time
     str_elapsed_time = str(elapsed_time.total_seconds())
 
-    # input_r = 'static/inputsNew/' + image.filename
     output = result_path["output"]
     psnr = result_path["psnr"]
     ssim = result_path["ssim"]
@@ -142,136 +132,67 @@ def allowed_file(filename):
 
 def evaluation(net, test_img_path, file_name):
 
-    print("FILE NAME ------------------> ", file_name)
-    generator.load_weights('TrainedModel\generator_0005.h5')
-    image_path = ('./static/inputs/' + file_name)
-    print("IMAGE PATH ------------------> ", image_path)
-
-    # Load a hazy image
-    input_image_path = image_path
-    hazy_image = Image.open(input_image_path)
-
-    # Preprocess the hazy image
-    # Resize the image to match the generator input size
-    hazy_image = hazy_image.resize((256, 256))
-    # Scale pixel values to the range [-1, 1]
-    hazy_image = np.array(hazy_image) / 127.5 - 1.0
-    hazy_image = np.expand_dims(hazy_image, axis=0)  # Add a batch dimension
-
-    # output_folder = "static/inputsNew/"
-    # output_filename = file_name  # Change the filename as needed
-    # output_path = os.path.join(output_folder, output_filename)
-    # resized_hazy_image = Image.fromarray(
-    #     (hazy_image[0] * 127.5 + 1.0).astype(np.uint8))
-    # resized_hazy_image.save(output_path)
-
-    # Pass the preprocessed image through the generator
-    dehazed_image = generator.predict(hazy_image)
-
-    # Post-process the dehazed image
-    dehazed_image = np.squeeze(dehazed_image)  # Remove the batch dimension
-    # Rescale pixel values to the range [0, 255]
-    dehazed_image = (dehazed_image + 1.0) * 127.5
-    dehazed_image = np.clip(dehazed_image, 0, 255).astype(
-        np.uint8)  # Clip values and convert to uint8
-
-    # Display or save the dehazed image
-    output_image_path = "static/outputs/dehazed_" + file_name
-    Image.fromarray(dehazed_image).save(output_image_path)
-
-    # Load the hazy and dehazed images as arrays
-    hazy_image = np.array(Image.open(input_image_path).resize((256, 256)))
-    dehazed_image = np.array(Image.open(output_image_path))
-
-    # Calculate the PSNR and SSIM scores
-    # psnr = peak_signal_noise_ratio(hazy_image, dehazed_image)
-
-    hazy_image = np.array(Image.open(input_image_path).resize((256, 256)))
-    dehazed_image = np.array(Image.open(output_image_path))
-
-    hazy_image = np.array(Image.open(input_image_path).resize((256, 256)))
-    dehazed_image = np.array(Image.open(output_image_path))
-
-    hazy_image = hazy_image.astype(np.float32) / 255.0
-    dehazed_image = dehazed_image.astype(np.float32) / 255.0
-
-    psnr = tf.image.psnr(tf.expand_dims(
-        hazy_image, axis=0), tf.expand_dims(dehazed_image, axis=0), max_val=1.0)
-    ssim = tf.image.ssim(tf.expand_dims(hazy_image, axis=0),
-                         tf.expand_dims(dehazed_image, axis=0), max_val=1.0)
-
-    psnr = psnr.numpy()[0]
-    ssim = ssim.numpy()[0]
-
-    # ssim = structural_similarity(hazy_image, dehazed_image, multichannel=True)
-
-    # # Print the scores
-    print('PSNR ++++++++++++>>>>>: ', psnr)
-    print('SSIM ============>>>>>: ', ssim)
-
-    # =================================================================================================
-
     # test_img = glob.glob(test_img_path + '/*.jpg')
-    # test_img = glob.glob('./static/inputs/' + file_name)
-    # random.shuffle(test_img)
+    test_img = glob.glob('./static/inputs/' + file_name)
+    random.shuffle(test_img)
 
-    # print("Number of test images:", len(test_img))
+    print("Number of test images:", len(test_img))
 
-    # psnr_values = []
-    # ssim_values = []
+    psnr_values = []
+    ssim_values = []
 
-    # for img_path in test_img:
+    for img_path in test_img:
 
-    #     print("Image path:", img_path)
+        print("Image path:", img_path)
 
-    #     img = tf.io.read_file(img_path)
-    #     img = tf.io.decode_jpeg(img, channels=3)
+        img = tf.io.read_file(img_path)
+        img = tf.io.decode_jpeg(img, channels=3)
 
-    #     img = tf.image.resize(img, size=(412, 548), antialias=True)
-    #     img = img / 255
-    #     # transform input image from 3D to 4D
-    #     img = tf.expand_dims(img, axis=0)
+        img = tf.image.resize(img, size=(412, 548), antialias=True)
+        img = img / 255
+        # transform input image from 3D to 4D
+        img = tf.expand_dims(img, axis=0)
 
-    #     dehaze = net(img, training=False)
+        dehaze = net(img, training=False)
 
-    #     my_array = dehaze[0].numpy()
+        my_array = dehaze[0].numpy()
 
-    #     # Convert the NumPy array to an image
-    #     generated_image = image.array_to_img(my_array)
-    #     print(" ")
-    #     print(" ")
-    #     print("++++++++++++++++")
-    #     print(" ")
-    #     print(generated_image)
-    #     print(" ")
-    #     print(" ")
+        # Convert the NumPy array to an image
+        generated_image = image.array_to_img(my_array)
+        print(" ")
+        print(" ")
+        print("++++++++++++++++")
+        print(" ")
+        print(generated_image)
+        print(" ")
+        print(" ")
 
-    #     # Save the image to a file
-    #     output_image_path = "static/outputs/dehazed_" + file_name
-    #     image.save_img(output_image_path, generated_image)
+        # Save the image to a file
+        output_image_path = "static/outputs/dehazed_" + file_name
+        image.save_img(output_image_path, generated_image)
 
-    #     # Calculate PSNR and SSIM
-    #     psnr = tf.image.psnr(dehaze[0], img[0], max_val=1.0)
-    #     ssim = tf.image.ssim(dehaze[0], img[0], max_val=1.0)
+        # Calculate PSNR and SSIM
+        psnr = tf.image.psnr(dehaze[0], img[0], max_val=1.0)
+        ssim = tf.image.ssim(dehaze[0], img[0], max_val=1.0)
 
-    #     # Append PSNR and SSIM values to lists
-    #     psnr_values.append(psnr.numpy())
-    #     ssim_values.append(ssim.numpy())
+        # Append PSNR and SSIM values to lists
+        psnr_values.append(psnr.numpy())
+        ssim_values.append(ssim.numpy())
 
-    # # Compute and print average PSNR and SSIM
-    # avg_psnr = sum(psnr_values) / len(psnr_values)
-    # avg_ssim = sum(ssim_values) / len(ssim_values)
-    # print("Average PSNR:", avg_psnr)
-    # print(" ")
-    # print("Average SSIM:", avg_ssim)
-    # print("Evaluation complete")
+    # Compute and print average PSNR and SSIM
+    avg_psnr = sum(psnr_values) / len(psnr_values)
+    avg_ssim = sum(ssim_values) / len(ssim_values)
+    print("Average PSNR:", avg_psnr)
+    print(" ")
+    print("Average SSIM:", avg_ssim)
+    print("Evaluation complete")
 
     # return output_image_path
     # , avg_psnr, avg_ssim
     data = {
         "output": output_image_path,
-        "psnr": psnr.item(),
-        "ssim": ssim.item()
+        "psnr": avg_psnr,
+        "ssim": avg_ssim
     }
     return data
 

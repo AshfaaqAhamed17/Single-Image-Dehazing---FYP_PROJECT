@@ -8,7 +8,6 @@ import numpy as np
 from PIL import Image
 from skimage.metrics import peak_signal_noise_ratio
 from tensorflow.image import psnr, ssim
-# from skimage.metrics import structural_similarity as ssim
 import glob
 import random
 import datetime
@@ -21,7 +20,8 @@ import generator
 
 
 UPLOAD_FOLDER = 'myenv/static/inputs'
-remove_directories = ['./static/inputs', './static/outputs']
+remove_directories = ['./static/inputs',
+                      './static/outputs', './static/inputsResized']
 
 # model_path = 'myenv\model\saved_model.pb'  # replace with your model path
 # model = tf.saved_model.load(model_path)
@@ -49,14 +49,17 @@ def main():
     print('CLEAR INPUTS DIRECTORY')
     print(' ')
     clear_directory('myenv\static\outputs')
+    print(' ')
     print('CLEAR OUTPUTS DIRECTORY')
     print(' ')
-
+    clear_directory('myenv\static\inputsResized')
+    print(' ')
+    print('CLEAR RESIZED INPUTS DIRECTORY')
+    print(' ')
     print(generator)
     return render_template('upload.html')
 
 # ---------------------------------------------------------------------------------------
-
 
 @app.route('/contactus')
 def contactus():
@@ -92,7 +95,7 @@ def loading():
     elapsed_time = end_time - start_time
     str_elapsed_time = str(elapsed_time.total_seconds())
 
-    # input_r = 'static/inputsNew/' + image.filename
+    input_r = result_path["resized"]
     output = result_path["output"]
     psnr = result_path["psnr"]
     ssim = result_path["ssim"]
@@ -109,29 +112,15 @@ def loading():
     print(" ")
 
     data = {
-        "input": image_url,
+        "input": input_r,
         "output": output,
         "time": str_elapsed_time,
         "psnr": psnr,
         "ssim": ssim,
-
         "message": "Image successfully dehazed",
         "status": 200
-        # "version tf": tf.__version__,
-        # "version np": np.__version__
     }
     return jsonify(data)
-
-    # print(' ')
-    # clear_directory('myenv\static\inputs')
-    # print(' ')
-    # print('CLEAR INPUTS DIRECTORY')
-    # print(' ')
-    # clear_directory('myenv\static\outputs')
-    # print('CLEAR OUTPUTS DIRECTORY')
-    # print(' ')
-
-    # return (response)
 
 
 def allowed_file(filename):
@@ -154,16 +143,14 @@ def evaluation(net, test_img_path, file_name):
     # Preprocess the hazy image
     # Resize the image to match the generator input size
     hazy_image = hazy_image.resize((256, 256))
+
+    hazy_image_url = url_for(
+        'static', filename='inputsResized/' + file_name)
+    hazy_image.save(app.root_path + hazy_image_url)
+
     # Scale pixel values to the range [-1, 1]
     hazy_image = np.array(hazy_image) / 127.5 - 1.0
     hazy_image = np.expand_dims(hazy_image, axis=0)  # Add a batch dimension
-
-    # output_folder = "static/inputsNew/"
-    # output_filename = file_name  # Change the filename as needed
-    # output_path = os.path.join(output_folder, output_filename)
-    # resized_hazy_image = Image.fromarray(
-    #     (hazy_image[0] * 127.5 + 1.0).astype(np.uint8))
-    # resized_hazy_image.save(output_path)
 
     # Pass the preprocessed image through the generator
     dehazed_image = generator.predict(hazy_image)
@@ -186,12 +173,6 @@ def evaluation(net, test_img_path, file_name):
     # Calculate the PSNR and SSIM scores
     # psnr = peak_signal_noise_ratio(hazy_image, dehazed_image)
 
-    hazy_image = np.array(Image.open(input_image_path).resize((256, 256)))
-    dehazed_image = np.array(Image.open(output_image_path))
-
-    hazy_image = np.array(Image.open(input_image_path).resize((256, 256)))
-    dehazed_image = np.array(Image.open(output_image_path))
-
     hazy_image = hazy_image.astype(np.float32) / 255.0
     dehazed_image = dehazed_image.astype(np.float32) / 255.0
 
@@ -203,72 +184,12 @@ def evaluation(net, test_img_path, file_name):
     psnr = psnr.numpy()[0]
     ssim = ssim.numpy()[0]
 
-    # ssim = structural_similarity(hazy_image, dehazed_image, multichannel=True)
-
     # # Print the scores
     print('PSNR ++++++++++++>>>>>: ', psnr)
     print('SSIM ============>>>>>: ', ssim)
 
-    # =================================================================================================
-
-    # test_img = glob.glob(test_img_path + '/*.jpg')
-    # test_img = glob.glob('./static/inputs/' + file_name)
-    # random.shuffle(test_img)
-
-    # print("Number of test images:", len(test_img))
-
-    # psnr_values = []
-    # ssim_values = []
-
-    # for img_path in test_img:
-
-    #     print("Image path:", img_path)
-
-    #     img = tf.io.read_file(img_path)
-    #     img = tf.io.decode_jpeg(img, channels=3)
-
-    #     img = tf.image.resize(img, size=(412, 548), antialias=True)
-    #     img = img / 255
-    #     # transform input image from 3D to 4D
-    #     img = tf.expand_dims(img, axis=0)
-
-    #     dehaze = net(img, training=False)
-
-    #     my_array = dehaze[0].numpy()
-
-    #     # Convert the NumPy array to an image
-    #     generated_image = image.array_to_img(my_array)
-    #     print(" ")
-    #     print(" ")
-    #     print("++++++++++++++++")
-    #     print(" ")
-    #     print(generated_image)
-    #     print(" ")
-    #     print(" ")
-
-    #     # Save the image to a file
-    #     output_image_path = "static/outputs/dehazed_" + file_name
-    #     image.save_img(output_image_path, generated_image)
-
-    #     # Calculate PSNR and SSIM
-    #     psnr = tf.image.psnr(dehaze[0], img[0], max_val=1.0)
-    #     ssim = tf.image.ssim(dehaze[0], img[0], max_val=1.0)
-
-    #     # Append PSNR and SSIM values to lists
-    #     psnr_values.append(psnr.numpy())
-    #     ssim_values.append(ssim.numpy())
-
-    # # Compute and print average PSNR and SSIM
-    # avg_psnr = sum(psnr_values) / len(psnr_values)
-    # avg_ssim = sum(ssim_values) / len(ssim_values)
-    # print("Average PSNR:", avg_psnr)
-    # print(" ")
-    # print("Average SSIM:", avg_ssim)
-    # print("Evaluation complete")
-
-    # return output_image_path
-    # , avg_psnr, avg_ssim
     data = {
+        "resized": hazy_image_url,
         "output": output_image_path,
         "psnr": psnr.item(),
         "ssim": ssim.item()

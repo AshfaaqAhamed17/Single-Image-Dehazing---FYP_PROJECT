@@ -61,6 +61,7 @@ def main():
 
 # ---------------------------------------------------------------------------------------
 
+
 @app.route('/contactus')
 def contactus():
     return render_template('contactus.html')
@@ -73,7 +74,7 @@ def loading():
         return 'No image file provided', 400
 
     image = request.files['image']
-
+    image.filename = image.filename.replace(' ', '')
     if image.filename == '':
         return 'No selected image file', 400
 
@@ -125,6 +126,8 @@ def loading():
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+    filename = filename.replace(' ', '')
+    print(filename)
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -132,7 +135,8 @@ def allowed_file(filename):
 def evaluation(net, test_img_path, file_name):
 
     print("FILE NAME ------------------> ", file_name)
-    generator.load_weights('TrainedModel\generator_0005.h5')
+    # generator.load_weights('TrainedModel\generator_0005.h5')
+    generator.load_weights('TrainedModel\generator_0100.h5')
     image_path = ('./static/inputs/' + file_name)
     print("IMAGE PATH ------------------> ", image_path)
 
@@ -271,4 +275,5 @@ def upload():
 @app.route('/output/<filename>', methods=['POST', 'GET'])
 def output(filename):
     # return render_template('output.html')
+    filename = filename.replace(' ', '')
     return render_template('output.html', image_url=url_for('static', filename='inputs/' + filename))

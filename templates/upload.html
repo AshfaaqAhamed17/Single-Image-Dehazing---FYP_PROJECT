@@ -145,14 +145,14 @@
                         <div class="d-flex justify-content-center my-3">
                             <div class="form-check mr-3">
                                 <input class="form-check-input" type="radio" name="image_check" id="indoor_check"
-                                    value="0">
+                                    value="1">
                                 <label class="form-check-label font-weight-bold" for="indoor_check">
                                     Indoor image
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="image_check" id="outdoor_check"
-                                    value="1">
+                                    value="0">
                                 <label class="form-check-label font-weight-bold" for="outdoor_check">
                                     Outdoor image
                                 </label>
@@ -203,19 +203,16 @@
         </div>
     </div>
 
-    <div class="mt-4 alert alert-dismissible alert-success w-25 mt-3 d-block mx-auto fade text-center " role="alert"
+    <div class="mt-4 mb-0 alert alert-dismissible alert-success w-25 d-block mx-auto fade text-center " role="alert"
         id="alert-bar">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                 aria-hidden="true">&times;</span></button>
-        <span class="font-weight-bold fs-6"> Successfully dehazed image !!</span>
+        <span class="font-weight-bold fs-6"> Successfully dehazed image!!</span>
     </div>
 
-    <section class="output_section container" id="output_section" style="display: none">
-
-
+    <section class="output_section container mt-4" id="output_section" style="display: none">
         <div class="row w-100">
             <div class="col-md-9">
-
                 <div class="d-flex align-items-center bg-light shadow justify-content-center py-4 "
                     style="border-radius: 10px;" id="image_section">
                     <!-- FROM AJAX JQUERY ==> input image | converter image | output image -->
@@ -232,11 +229,8 @@
 
                 <div class="mb-2 mt-4 py-2 px-3 bg-light shadow " style="border-radius: 10px;">
                     <button class="btn btn-success w-100 my-3" id="downloadbtn"></button>
-                    <!-- <div class="d-flex justify-content-between align-items-center">
-                        <div class="w-100"> -->
                     <button class="btn btn-primary w-100" id="savebtn"> <i class="fa fa-cloud-upload mr-2"></i>
-                        Save
-                        image <i class="fa fa-info-circle text-warning fs-5 new ml-5" data-toggle="popover"
+                        Save image <i class="fa fa-info-circle text-warning fs-5 new ml-5" data-toggle="popover"
                             data-trigger="focus" title="Saving image to HazeHunt cloud"></i></button>
                     <a href="/main" class="text-decoration-none"> <button class="btn btn-outline-primary w-100 my-3"><i
                                 class="fa fa-low-vision mr-2"></i> Dehaze new
@@ -349,43 +343,54 @@
             reader.readAsDataURL(file);
 
             $(document).on("click", "#uploadbtn", function (e) {
-                $("#loadingModal").modal("show");
                 var postFormData = new FormData();
-                postFormData = new FormData();
-                postFormData.append("image", img.file);
                 var image = postFormData.get("image");
+                var image_type = $('input[name="image_check"]:checked').val();
+                if (image_type == null) {
+                    swal.fire({
+                        title: "Please select an image type",
+                        icon: "warning",
+                        showConfirmButton: false,
+                        timer: 2000,
+                    });
+                    return;
+                } else {
+                    $("#loadingModal").modal("show");
+                    console.log("selectedValue ==> ", image_type);
+                    postFormData.append("image", img.file);
+                    postFormData.append("image_type", image_type);
 
-                $.ajax({
-                    url: "/loading",
-                    type: "POST",
-                    data: postFormData,
-                    processData: false,
-                    contentType: false,
-                }).done(function (response) {
-                    console.log(" DONE ====> response ==> ", response);
-                    $("#loadingModal").modal("hide");
-                    //$("#loadingModal").addClass("d-none");
-                    $("#alert-bar").addClass("show");
-                    $('.input-content').addClass('d-none')
-                    $(".output_section").addClass("d-block");
-                    console.log(" LINE 209 ", response);
-                    if (response) {
-                        console.log(response);
-                        console.log(response.status);
-                        console.log("SUCCESS");
+                    $.ajax({
+                        url: "/loading",
+                        type: "POST",
+                        data: postFormData,
+                        processData: false,
+                        contentType: false,
+                    }).done(function (response) {
+                        console.log(" DONE ====> response ==> ", response);
+                        $("#loadingModal").modal("hide");
+                        //$("#loadingModal").addClass("d-none");
+                        $("#alert-bar").addClass("show");
+                        $('.input-content').addClass('d-none')
+                        $(".output_section").addClass("d-block");
+                        console.log(" LINE 209 ", response);
+                        if (response) {
+                            console.log(response);
+                            console.log(response.status);
+                            console.log("SUCCESS");
 
-                        var input_path = response.input;
-                        console.log("input_path from response ==> ", input_path);
-                        var input_path = input_path.split("inputsResized")[1];
-                        console.log("input_path ==> ", input_path);
+                            var input_path = response.input;
+                            console.log("input_path from response ==> ", input_path);
+                            var input_path = input_path.split("inputsResized")[1];
+                            console.log("input_path ==> ", input_path);
 
-                        var output_path = response.output;
-                        var output_path = output_path.split("outputs/")[1];
-                        console.log("output_path ==> ", output_path);
+                            var output_path = response.output;
+                            var output_path = output_path.split("outputs/")[1];
+                            console.log("output_path ==> ", output_path);
 
-                        var time_taken = response.time + " seconds";
+                            var time_taken = response.time + " seconds";
 
-                        $("#image_section").append(`
+                            $("#image_section").append(`
                             <div class="">
                                 <p class="font-weight-bold text-center">Input Image</p>
                                 <div id="images_container" class="">
@@ -401,29 +406,28 @@
                             <div  class="">
                                 <p class=" font-weight-bold text-center">Output Image</p>
                                 <div id="images_container">
-                                    <img src="static/outputs/${output_path}" alt="Output Image" id="output_image"/>
+                                    <img src="static/images/0469.jpg" alt="Output Image" id="output_image" height="256px" width="256px"/>
+                                    <!-- <img src="static/outputs/${output_path}" alt="Output Image" id="output_image"/> -->
                                     <!-- <img src="{{ url_for('static', filename='${output_path}') }}" alt="Output Image" /> -->
                 
                                 </div>
                             </div>
                         `);
-
-                        $("#Time").text(time_taken);
-                        $("#downloadbtn").append(`
+                            $("#Time").text(time_taken);
+                            $("#downloadbtn").append(`
                             <a href="static/outputs/${output_path}" download="${output_path}" style="    text-decoration: none; color: inherit;"><i class="fa fa-download me-2" aria-hidden="true"></i>Download Image</a>
                         `);
-                    } else {
-                        console.log("ELSE");
-                        swal.fire({
-                            title: "Dehaze Failed! Please try again!",
-                            icon: "error",
-                            showConfirmButton: true,
-                        }).then(function () {
-                            location.reload();
-                        });
-                    }
-                })
-                    .fail(function (response) {
+                        } else {
+                            console.log("ELSE");
+                            swal.fire({
+                                title: "Dehaze Failed! Please try again!",
+                                icon: "error",
+                                showConfirmButton: true,
+                            }).then(function () {
+                                location.reload();
+                            });
+                        }
+                    }).fail(function (response) {
                         $("#loadingModal").modal("hide");
                         console.log("FAIL");
                         console.log(response.responseText);
@@ -439,6 +443,8 @@
                                 }
                             });
                     });
+                }
+
             });
         }
 
@@ -453,73 +459,90 @@
         $(document).on("click", "#savebtn", function (e) {
             console.log("save button clicked");
 
-            var hazy_canvas = document.createElement("canvas");
-            var hazy_context = hazy_canvas.getContext("2d");
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "The image will be saved to HazeHunt system server!",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, save it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var hazy_canvas = document.createElement("canvas");
+                    var hazy_context = hazy_canvas.getContext("2d");
 
-            var hazy_image = new Image();
-            hazy_image.onload = function () {
-                var input_image = $("#input_image").attr("src");
-                input_image = input_image.split("inputsResized/")[1];
-                console.log("input_image ==> ", input_image);
+                    var hazy_image = new Image();
+                    hazy_image.onload = function () {
+                        var input_image = $("#input_image").attr("src");
+                        input_image = input_image.split("inputsResized/")[1];
+                        console.log("input_image ==> ", input_image);
 
-                var output_image = $("#output_image").attr("src");
-                output_image = output_image.split("outputs/")[1];
-                console.log("output_image ==> ", output_image);
+                        var output_image = $("#output_image").attr("src");
+                        output_image = output_image.split("outputs/")[1];
+                        console.log("output_image ==> ", output_image);
 
-                hazy_canvas.width = hazy_image.width;
-                hazy_canvas.height = hazy_image.height;
-                hazy_context.drawImage(hazy_image, 0, 0);
-                hazy_canvas.toBlob(
-                    function (hazy_blob) {
-                        var dehazed_canvas = document.createElement("canvas");
-                        var dehazed_context = dehazed_canvas.getContext("2d");
+                        hazy_canvas.width = hazy_image.width;
+                        hazy_canvas.height = hazy_image.height;
+                        hazy_context.drawImage(hazy_image, 0, 0);
+                        hazy_canvas.toBlob(
+                            function (hazy_blob) {
+                                var dehazed_canvas = document.createElement("canvas");
+                                var dehazed_context = dehazed_canvas.getContext("2d");
 
-                        var dehazed_image = new Image();
-                        dehazed_image.onload = function () {
-                            dehazed_canvas.width = dehazed_image.width;
-                            dehazed_canvas.height = dehazed_image.height;
-                            dehazed_context.drawImage(dehazed_image, 0, 0);
-                            dehazed_canvas.toBlob(
-                                function (dehazed_blob) {
-                                    var formData = new FormData();
-                                    formData.append("hazy_image", hazy_blob, input_image);
-                                    formData.append("dehazed_image", dehazed_blob, output_image);
+                                var dehazed_image = new Image();
+                                dehazed_image.onload = function () {
+                                    dehazed_canvas.width = dehazed_image.width;
+                                    dehazed_canvas.height = dehazed_image.height;
+                                    dehazed_context.drawImage(dehazed_image, 0, 0);
+                                    dehazed_canvas.toBlob(
+                                        function (dehazed_blob) {
+                                            var formData = new FormData();
+                                            formData.append("hazy_image", hazy_blob, input_image);
+                                            formData.append("dehazed_image", dehazed_blob, output_image);
 
-                                    $.ajax({
-                                        url: "/save_images",
-                                        type: "POST",
-                                        data: formData,
-                                        contentType: false,
-                                        processData: false,
-                                        success: function (response) {
-                                            swal.fire({
-                                                title: "Image is successfully saved",
-                                                icon: "success",
-                                                showConfirmButton: false,
-                                                timer: 2000,
+                                            $.ajax({
+                                                url: "/save_images",
+                                                type: "POST",
+                                                data: formData,
+                                                contentType: false,
+                                                processData: false,
+                                                success: function (response) {
+                                                    swal.fire({
+                                                        title: "Image is successfully saved",
+                                                        icon: "success",
+                                                        showConfirmButton: false,
+                                                        timer: 2000,
+                                                    });
+                                                },
+                                                error: function (xhr, status, error) {
+                                                    swal.fire({
+                                                        title: response.responseText,
+                                                        icon: "error",
+                                                        showConfirmButton: false,
+                                                        timer: 2000,
+                                                    });
+                                                },
                                             });
                                         },
-                                        error: function (xhr, status, error) {
-                                            swal.fire({
-                                                title: response.responseText,
-                                                icon: "error",
-                                                showConfirmButton: false,
-                                                timer: 2000,
-                                            });
-                                        },
-                                    });
-                                },
-                                "image/jpeg",
-                                0.9
-                            );
-                        };
-                        dehazed_image.src = $("#output_image").attr("src");
-                    },
-                    "image/jpeg",
-                    0.9
-                );
-            };
-            hazy_image.src = $("#input_image").attr("src");
+                                        "image/jpeg",
+                                        0.9
+                                    );
+                                };
+                                dehazed_image.src = $("#output_image").attr("src");
+                            },
+                            "image/jpeg",
+                            0.9
+                        );
+                    };
+                    hazy_image.src = $("#input_image").attr("src");
+                    //Swal.fire(
+                    //'Deleted!',
+                    //'Your file has been deleted.',
+                    //  'success'
+                    //)
+                }
+            })
         });
 
         // ----------------------------------------------------------------------------------------------------

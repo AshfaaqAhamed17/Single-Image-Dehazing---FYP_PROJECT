@@ -18,13 +18,9 @@ from keras.models import load_model
 # Evaluation
 import generator
 
-
 UPLOAD_FOLDER = 'myenv/static/inputs'
 remove_directories = ['./static/inputs',
                       './static/outputs', './static/inputsResized']
-
-# model_path = 'myenv\model\saved_model.pb'  # replace with your model path
-# model = tf.saved_model.load(model_path)
 
 generator = generator.build_generator()
 dehaze_model = tf.keras.models.load_model('model', compile=False)
@@ -81,14 +77,16 @@ def loading():
     if not allowed_file(image.filename):
         return 'Invalid file type', 400
 
+    image_type = request.form['image_type']
+    print("IMAGE TYPE ------------------> ", image_type)
+
     # Save the image to the static folder
-    image_url = url_for('static', filename='inputs/' + image.filename)
+    image_url = url_for('static', filename='inputs/' + image.filename, )
     image.save(app.root_path + image_url)
 
     start_time = datetime.datetime.now()
 
-    result_path = evaluation(
-        dehaze_model, 'myenv\static\inputs', image.filename)
+    result_path = evaluation('static/inputs/', image.filename, image_type)
 
     response = send_file(result_path, mimetype='image/jpeg')
 
@@ -98,14 +96,8 @@ def loading():
 
     input_r = result_path["resized"]
     output = result_path["output"]
-    psnr = result_path["psnr"]
-    ssim = result_path["ssim"]
 
     print("oooooooooooooooo---->>>>>>>output:", output)
-    print("ppppssssnnnnrrrr---->>>>>>>psnr:", psnr)
-    print("sssssssssiiiiiim---->>>>>>>ssim:", ssim)
-
-    print("RRRRRRRRRRRRRRRRR---->>>>>>>result_path:", result_path)
 
     print(">>>>>>>>>>>>>>>>>>>>>>>>Elapsed time:", elapsed_time)
     print(" ")
@@ -116,8 +108,6 @@ def loading():
         "input": input_r,
         "output": output,
         "time": str_elapsed_time,
-        "psnr": psnr,
-        "ssim": ssim,
         "message": "Image successfully dehazed",
         "status": 200
     }
@@ -132,12 +122,10 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def evaluation(net, test_img_path, file_name):
+def evaluation(img_root_path, file_name, image_type):
 
     print("FILE NAME ------------------> ", file_name)
-    # generator.load_weights('TrainedModel\generator_0005.h5')
-    generator.load_weights('TrainedModel\generator_0100.h5')
-    image_path = ('./static/inputs/' + file_name)
+    image_path = (img_root_path + file_name)
     print("IMAGE PATH ------------------> ", image_path)
 
     # Load a hazy image
@@ -156,8 +144,25 @@ def evaluation(net, test_img_path, file_name):
     hazy_image = np.array(hazy_image) / 127.5 - 1.0
     hazy_image = np.expand_dims(hazy_image, axis=0)  # Add a batch dimension
 
-    # Pass the preprocessed image through the generator
-    dehazed_image = generator.predict(hazy_image)
+    if image_type == "0":
+        # OUTDOOR LOAD MODEL
+        print('----------------------------------------------')
+        print("++++++++------LOAD OUTDOOR MODEL------++++++++")
+        print('----------------------------------------------')
+        generator.load_weights(
+            'TrainedModel\OutdoorModel\outdoor_generator_0050.h5')
+        # Pass the preprocessed image through the generator
+        dehazed_image = generator.predict(hazy_image)
+    elif image_type == "1":
+        # INDOOR LOAD MODEL
+        print('---------------------------------------------')
+        print("++++++++------LOAD INDOOR MODEL------++++++++")
+        print('---------------------------------------------')
+
+        generator.load_weights(
+            'TrainedModel\IndoorModel\indoor_generator_0050.h5')
+        # Pass the preprocessed image through the generator
+        dehazed_image = generator.predict(hazy_image)
 
     # Post-process the dehazed image
     dehazed_image = np.squeeze(dehazed_image)  # Remove the batch dimension
@@ -174,31 +179,13 @@ def evaluation(net, test_img_path, file_name):
     hazy_image = np.array(Image.open(input_image_path).resize((256, 256)))
     dehazed_image = np.array(Image.open(output_image_path))
 
-    # Calculate the PSNR and SSIM scores
-    # psnr = peak_signal_noise_ratio(hazy_image, dehazed_image)
-
-    hazy_image = hazy_image.astype(np.float32) / 255.0
-    dehazed_image = dehazed_image.astype(np.float32) / 255.0
-
-    psnr = tf.image.psnr(tf.expand_dims(
-        hazy_image, axis=0), tf.expand_dims(dehazed_image, axis=0), max_val=1.0)
-    ssim = tf.image.ssim(tf.expand_dims(hazy_image, axis=0),
-                         tf.expand_dims(dehazed_image, axis=0), max_val=1.0)
-
-    psnr = psnr.numpy()[0]
-    ssim = ssim.numpy()[0]
-
-    # # Print the scores
-    print('PSNR ++++++++++++>>>>>: ', psnr)
-    print('SSIM ============>>>>>: ', ssim)
-
     data = {
         "resized": hazy_image_url,
         "output": output_image_path,
-        "psnr": psnr.item(),
-        "ssim": ssim.item()
     }
     return data
+
+# ---------------------------------------------------------------------------------------
 
 
 def clear_directory(directory_path):
@@ -215,14 +202,6 @@ def clear_directory(directory_path):
             except Exception as e:
                 print('Failed to delete %s. due to: %s' % (full_path, e))
 
-    # Save the dehazed image to the static folder
-    # output_image = dehaze[0]
-    # print(output_image)
-    # output_image_name = "output_67"
-    # output_image_url = url_for(
-    #     'static', filename='outputs/' + output_image_name)
-    # output_image.save(app.root_path + output_image_url)
-    # return output_image_name
 # ---------------------------------------------------------------------------------------
 
 

@@ -1,7 +1,0 @@
-
-static/dataset/dehazed_images/*
-static/dataset/hazy_images/*
-static/inputs/*
-static/inputsNew/*
-static/inputsResized/*
-static/outputs/*

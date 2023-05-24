@@ -21,7 +21,9 @@ imageio==2.27.0
 importlib-metadata==6.0.0
 itsdangerous==2.1.2
 Jinja2==3.1.2
+joblib==1.2.0
 keras==2.11.0
+keras-contrib @ git+https://www.github.com/keras-team/keras-contrib.git@3fc5ef709e061416f4bc8a92ca3750c824b5d2b0
 lazy_loader==0.2
 libclang==15.0.6.1
 Markdown==3.4.1
@@ -41,6 +43,7 @@ requests==2.28.2
 requests-oauthlib==1.3.1
 rsa==4.9
 scikit-image==0.20.0
+scikit-learn==1.2.2
 scipy==1.9.1
 six==1.15.0
 tensorboard==2.11.2
@@ -51,6 +54,7 @@ tensorflow-estimator==2.11.0
 tensorflow-intel==2.11.0
 tensorflow-io-gcs-filesystem==0.31.0
 termcolor==2.2.0
+threadpoolctl==3.1.0
 tifffile==2023.3.21
 typing_extensions==4.5.0
 urllib3==1.26.15

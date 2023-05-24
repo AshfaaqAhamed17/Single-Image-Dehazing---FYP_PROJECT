@@ -1,57 +1,90 @@
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
+from tensorflow.keras.layers import Multiply, Add
+from tensorflow.keras.losses import mean_squared_error
+from tensorflow.keras.models import Model
 import tensorflow as tf
+from keras_contrib.layers.normalization.instancenormalization import InstanceNormalization
+from keras.layers import Activation
+from keras.layers import Concatenate
+from tensorflow import keras
+from random import random
+from numpy import load
+from numpy import zeros
+from numpy import ones
+from numpy import asarray
+from numpy.random import randint
+from tensorflow.keras.optimizers import Adam
+from keras.initializers import RandomNormal
 
 
-def build_generator():
-    inputs = tf.keras.layers.Input(shape=(256, 256, 3))
-    k_init = tf.keras.initializers.glorot_uniform()
-    b_init = tf.keras.initializers.zeros()
-    regularizer = tf.keras.regularizers.l2(0.01)
+def resisudal_block(filters, size):
+    result = tf.keras.Sequential()
+    result.add(downsample(filters, size, strides=1, activation='ReLU'))
+    result.add(downsample(filters, size, strides=1, activation='None'))
 
-    conv = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                  bias_initializer=b_init, kernel_regularizer=regularizer)(inputs)
-    conv = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                  bias_initializer=b_init, kernel_regularizer=regularizer)(conv)
+    return result
 
-    #### Encoding Layers #####
-    conv_up = tf.keras.layers.Conv2D(filters=128, kernel_size=3, strides=2, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv)
-    conv_up = tf.keras.layers.Conv2D(filters=128, kernel_size=3, strides=2, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv_up)
 
-    #### Residual Layers #####
-    conv1_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv_up)
-    conv1_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv1_1)
-    conv1_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=tf.keras.initializers.glorot_normal(seed=101),
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv1_2)
-    conc1 = tf.add(conv1_3, conv1_1)
-    conv1 = tf.keras.activations.relu(conc1)
+def resnet_block(n_filters, input_layer):
+    init = RandomNormal(stddev=0.02, mean=0.0)
+    g = Conv2D(n_filters, (3, 3), padding='same',
+               kernel_initializer=init)(input_layer)
+    g = InstanceNormalization(axis=-1)(g)
+    g = Activation('relu')(g)
+    g = Conv2D(n_filters, (3, 3), padding='same', kernel_initializer=init)(g)
+    g = InstanceNormalization(axis=-1)(g)
+    g = Concatenate()([g, input_layer])
+    return g
 
-    conv2_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv1)
-    conv2_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv2_1)
-    conv2_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=tf.keras.initializers.glorot_normal(seed=101),
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv2_2)
-    conc2 = tf.add(conv2_3, conv2_1)
-    conv2 = tf.keras.activations.relu(conc2)
 
-    conv3_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv2)
-    conv3_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv3_1)
-    conv3_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv3_2)
-    conv3_4 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv3_3)
-    conv3_5 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=tf.keras.initializers.glorot_normal(seed=101),
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv3_4)
-    conc3 = tf.add(conv3_5, conv3_1)
-    conv3 = tf.keras.activations.relu(conc3)
+k_init = tf.keras.initializers.random_normal(stddev=0.008, seed=101)
+regularizer = tf.keras.regularizers.L2(1e-4)
+b_init = tf.constant_initializer()
+
+
+def build_generator(n_resnet=9):
+    # height, width of input image changed because of error in output
+    inputs = tf.keras.Input(shape=[256, 256, 3])
+
+    init = RandomNormal(stddev=0.02, mean=0.0)
+
+    g = Conv2D(64, (7, 7), padding='same', kernel_initializer=init)(inputs)
+    g = InstanceNormalization(axis=-1)(g)
+    g = tf.keras.layers.Activation('relu')(g)
+
+    g = Conv2D(128, (3, 3), strides=(2, 2),
+               padding='same', kernel_initializer=init)(g)
+    g = InstanceNormalization(axis=-1)(g)
+    g = tf.keras.layers.Activation('relu')(g)
+
+    g = Conv2D(256, (3, 3), strides=(2, 2),
+               padding='same', kernel_initializer=init)(g)
+    g = InstanceNormalization(axis=-1)(g)
+    g = tf.keras.layers.Activation('relu')(g)
+
+    g = Conv2D(512, (3, 3), strides=(2, 2),
+               padding='same', kernel_initializer=init)(g)
+    g = InstanceNormalization(axis=-1)(g)
+    g = tf.keras.layers.Activation('relu')(g)
+
+    # g = Conv2D(512, (3,3), strides=(2,2), padding='same', kernel_initializer=init)(g)
+    # g = InstanceNormalization(axis=-1)(g)
+    # g = tf.keras.layers.Activation('relu')(g)
+
+    for _ in range(n_resnet):
+        g = resnet_block(256, g)
+    g = Conv2DTranspose(128, (3, 3), strides=(
+        2, 2), padding='same', kernel_initializer=init)(g)
+    g = InstanceNormalization(axis=-1)(g)
+    g = Activation('relu')(g)
+
+    g = Conv2DTranspose(64, (3, 3), strides=(
+        2, 2), padding='same', kernel_initializer=init)(g)
+    g = InstanceNormalization(axis=-1)(g)
+    g = Activation('relu')(g)
 
     conv4_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
-                                     bias_initializer=b_init, kernel_regularizer=regularizer)(conv3)
+                                     bias_initializer=b_init, kernel_regularizer=regularizer)(g)
     conv4_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
                                      bias_initializer=b_init, kernel_regularizer=regularizer)(conv4_1)
     conv4_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
@@ -69,45 +102,66 @@ def build_generator():
     deconv = tf.keras.layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', kernel_initializer=tf.keras.initializers.glorot_normal(seed=101),
                                              kernel_regularizer=regularizer)(deconv)
 
-    conv = tf.keras.layers.Conv2D(filters=64, kernel_size=3, strides=1, padding='same', kernel_initializer=k_init, activation='relu',
+    conv = tf.keras.layers.Conv2D(filters=128, kernel_size=3, strides=2, padding='same', kernel_initializer=k_init, activation='relu',
                                   bias_initializer=b_init, kernel_regularizer=regularizer)(deconv)
     conv = tf.keras.layers.Conv2D(filters=3, kernel_size=3, strides=1, padding='same', kernel_initializer=tf.keras.initializers.glorot_normal(seed=101),
                                   bias_initializer=b_init, kernel_regularizer=regularizer)(conv)
     conc = tf.add(conv, inputs)
 
-    # output = tf.keras.activations.relu(conc)
-
     outputs = tf.keras.layers.experimental.preprocessing.Resizing(
         256, 256, interpolation='bilinear')(conc)
 
-    return tf.keras.Model(inputs=inputs, outputs=outputs)
+    return Model(inputs=inputs, outputs=outputs)
+
+
+def downsample(filters, size, apply_batchnorm=True, strides=2, padding='same', activation='LeakyReLU'):
+    initializer = tf.random_normal_initializer(0., 0.02)
+
+    result = tf.keras.Sequential()
+    result.add(
+        tf.keras.layers.Conv2D(filters, size, strides=strides, padding=padding,
+                               use_bias=True))
+
+    if apply_batchnorm:
+        result.add(tf.keras.layers.BatchNormalization())
+
+    if activation == 'ReLU':
+        result.add(tf.keras.layers.ReLU())
+    elif activation == 'LeakyReLU':
+        result.add(tf.keras.layers.LeakyReLU())
+
+    return result
 
 
 def build_discriminator():
     input_hazy = tf.keras.layers.Input(shape=(256, 256, 3))
     input_clear = tf.keras.layers.Input(shape=(256, 256, 3))
 
-    x = tf.keras.layers.concatenate([input_hazy, input_clear])
+    # Concatenate the feature maps from the ResNet backbone
+    inp = tf.keras.layers.concatenate([input_hazy, input_clear])
+    init = RandomNormal(stddev=0.02, mean=0.0)
+    d = Conv2D(64, (4, 4), strides=(2, 2), padding='same',
+               kernel_initializer=init)(inp)
+    d = tf.keras.layers.LeakyReLU(alpha=0.2)(d)
 
-    x = tf.keras.layers.Conv2D(
-        64, 4, strides=2, padding='same', use_bias=False)(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.2)(x)
+    d = Conv2D(128, (4, 4), strides=(2, 2),
+               padding='same', kernel_initializer=init)(d)
+    d = InstanceNormalization(axis=-1)(d)
+    d = tf.keras.layers.LeakyReLU(alpha=0.2)(d)
 
-    x = tf.keras.layers.Conv2D(
-        128, 4, strides=2, padding='same', use_bias=False)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.2)(x)
+    d = Conv2D(256, (4, 4), strides=(2, 2),
+               padding='same', kernel_initializer=init)(d)
+    d = InstanceNormalization(axis=-1)(d)
+    d = tf.keras.layers.LeakyReLU(alpha=0.2)(d)
 
-    x = tf.keras.layers.Conv2D(
-        256, 4, strides=2, padding='same', use_bias=False)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.2)(x)
+    d = Conv2D(512, (4, 4), strides=(2, 2),
+               padding='same', kernel_initializer=init)(d)
+    d = InstanceNormalization(axis=-1)(d)
+    d = tf.keras.layers.LeakyReLU(alpha=0.2)(d)
+    d = Conv2D(512, (4, 4), padding='same', kernel_initializer=init)(d)
+    d = InstanceNormalization(axis=-1)(d)
+    d = tf.keras.layers.LeakyReLU(alpha=0.2)(d)
 
-    x = tf.keras.layers.Conv2D(
-        512, 4, strides=1, padding='same', use_bias=False)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.2)(x)
+    patch_out = Conv2D(1, (4, 4), padding='same', kernel_initializer=init)(d)
 
-    x = tf.keras.layers.Conv2D(1, 4, strides=1, padding='same')(x)
-
-    return tf.keras.Model(inputs=[input_hazy, input_clear], outputs=x)
+    return tf.keras.Model(inputs=[input_hazy, input_clear], outputs=patch_out)

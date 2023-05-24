@@ -23,7 +23,6 @@ remove_directories = ['./static/inputs',
                       './static/outputs', './static/inputsResized']
 
 generator = generator.build_generator()
-dehaze_model = tf.keras.models.load_model('model', compile=False)
 
 # model = load_model(model_path)
 app = Flask(__name__)
@@ -149,8 +148,10 @@ def evaluation(img_root_path, file_name, image_type):
         print('----------------------------------------------')
         print("++++++++------LOAD OUTDOOR MODEL------++++++++")
         print('----------------------------------------------')
+        # generator.load_weights(
+        #     'TrainedModel\OutdoorModel\outdoor_generator_0050.h5')
         generator.load_weights(
-            'TrainedModel\OutdoorModel\outdoor_generator_0050.h5')
+            'TrainedModel/OutdoorModel/new_outdoor_generator_0060.h5')
         # Pass the preprocessed image through the generator
         dehazed_image = generator.predict(hazy_image)
     elif image_type == "1":
@@ -159,8 +160,11 @@ def evaluation(img_root_path, file_name, image_type):
         print("++++++++------LOAD INDOOR MODEL------++++++++")
         print('---------------------------------------------')
 
+        # generator.load_weights(
+        #     'TrainedModel\IndoorModel\indoor_generator_0050.h5')
         generator.load_weights(
-            'TrainedModel\IndoorModel\indoor_generator_0050.h5')
+            'TrainedModel/IndoorModel/new_indoor_generator_0050.h5')
+
         # Pass the preprocessed image through the generator
         dehazed_image = generator.predict(hazy_image)
 
